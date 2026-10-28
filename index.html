@@ -1,0 +1,2248 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0F2C59">
+  <title>PharmaFlow | إدارة الإمداد الدوائي</title>
+  <meta name="description" content="منصة ذكية لإدارة مخزون الأدوية وسلاسل الإمداد والتوزيع الطبي.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: '#0F2C59',
+            orange: '#FF7F3E',
+            mint: '#10B981',
+            canvas: '#F8F9FA'
+          },
+          fontFamily: {
+            cairo: ['Cairo', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Icons and Charts -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --navy: #0F2C59;
+      --orange: #FF7F3E;
+      --mint: #10B981;
+      --canvas: #F8F9FA;
+      --border: #E8EDF3;
+      --muted: #77849A;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--canvas);
+      color: var(--navy);
+      font-family: 'Cairo', sans-serif;
+      font-size: 13px;
+    }
+
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 2px solid #FF7F3E;
+      outline-offset: 3px;
+    }
+
+    .app-shell { min-height: 100vh; }
+
+    .sidebar {
+      width: 252px;
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 50;
+      background: white;
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      transition: transform .25s ease;
+    }
+
+    .main-area {
+      margin-right: 252px;
+      min-width: 0;
+      min-height: 100vh;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: white;
+      background: var(--navy);
+      box-shadow: 0 7px 16px #0f2c5925;
+    }
+
+    .nav-link {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      color: #6C7A90;
+      font-weight: 600;
+      text-align: right;
+      transition: .2s;
+    }
+
+    .nav-link:hover { background: #F4F7FB; color: var(--navy); }
+
+    .nav-link.active {
+      color: var(--navy);
+      background: #EEF3FA;
+      font-weight: 800;
+    }
+
+    .nav-link.active .nav-icon {
+      color: var(--orange);
+    }
+
+    .nav-icon { width: 19px; height: 19px; flex-shrink: 0; }
+
+    .topbar {
+      height: 76px;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: rgba(255,255,255,.94);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+    }
+
+    .panel {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      box-shadow: 0 3px 14px rgba(15,44,89,.025);
+      min-width: 0;
+    }
+
+    .stat-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      padding: 19px;
+      min-width: 0;
+      transition: transform .2s, box-shadow .2s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px #0f2c590b;
+    }
+
+    .stat-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+    }
+
+    .section-view { display: none; }
+    .section-view.active { display: block; animation: fadeIn .25s ease; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .btn-primary {
+      background: var(--orange);
+      color: white;
+      border: 1px solid var(--orange);
+      border-radius: 9px;
+      padding: 10px 15px;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: .2s;
+    }
+
+    .btn-primary:hover {
+      background: #EB6A2D;
+      border-color: #EB6A2D;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: white;
+      color: var(--navy);
+      border: 1px solid #DDE4ED;
+      border-radius: 9px;
+      padding: 9px 13px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 700;
+    }
+
+    .btn-secondary:hover { background: #F5F7FA; }
+
+    .field {
+      width: 100%;
+      border: 1px solid #DFE6EF;
+      border-radius: 9px;
+      padding: 10px 12px;
+      background: white;
+      color: var(--navy);
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .field:focus { border-color: #7C9CC6; }
+
+    .field-label {
+      display: block;
+      margin-bottom: 7px;
+      font-weight: 700;
+      color: #53627A;
+      font-size: 12px;
+    }
+
+    .muted { color: var(--muted); }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 9px;
+      border-radius: 7px;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .status::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .status-ok { color: #07875B; background: #E9F9F1; }
+    .status-warn { color: #A96A00; background: #FFF5D9; }
+    .status-danger { color: #C33B43; background: #FFF0F0; }
+    .status-info { color: #3565A2; background: #EDF4FF; }
+
+    .table-wrap { width: 100%; overflow-x: auto; }
+
+    table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+
+    th {
+      text-align: right;
+      padding: 13px 15px;
+      background: #F8FAFC;
+      color: #718096;
+      font-size: 11px;
+      font-weight: 800;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 15px;
+      border-bottom: 1px solid #EFF2F6;
+      vertical-align: middle;
+    }
+
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr:hover { background: #FAFBFD; }
+
+    .medicine-symbol {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      background: #EEF3FA;
+      color: var(--navy);
+      flex-shrink: 0;
+    }
+
+    .progress-track {
+      height: 7px;
+      border-radius: 10px;
+      background: #EAF0F6;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: inherit;
+      transition: width .4s ease;
+    }
+
+    .step-dot {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      border: 2px solid #DCE4EE;
+      background: white;
+      color: #8A97AA;
+      flex-shrink: 0;
+    }
+
+    .step-dot.done {
+      color: white;
+      background: var(--mint);
+      border-color: var(--mint);
+    }
+
+    .step-dot.current {
+      color: var(--orange);
+      background: #FFF1E9;
+      border-color: var(--orange);
+    }
+
+    .timeline-line {
+      height: 2px;
+      background: #E2E8F0;
+      flex: 1;
+      min-width: 12px;
+    }
+
+    .timeline-line.done { background: var(--mint); }
+
+    .toast {
+      position: fixed;
+      bottom: 22px;
+      left: 22px;
+      z-index: 100;
+      width: min(370px, calc(100vw - 44px));
+      background: var(--navy);
+      color: white;
+      padding: 15px 17px;
+      border-radius: 12px;
+      box-shadow: 0 12px 40px #0f2c5933;
+      display: flex;
+      gap: 11px;
+      align-items: center;
+      animation: fadeIn .2s ease;
+    }
+
+    .toast.error { background: #A82E37; }
+
+    .toast[hidden] { display: none; }
+
+    .alert-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 13px 0;
+      border-bottom: 1px solid #EFF2F6;
+    }
+
+    .alert-row:last-child { border-bottom: 0; }
+
+    .alert-symbol {
+      width: 35px;
+      height: 35px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .mobile-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #0F2C594D;
+      z-index: 40;
+    }
+
+    .mobile-overlay.show { display: block; }
+
+    .empty-state {
+      text-align: center;
+      padding: 35px 15px;
+      color: var(--muted);
+    }
+
+    @media (min-width: 1500px) {
+      .page-content { max-width: 1600px; margin-inline: auto; }
+    }
+
+    @media (max-width: 1100px) {
+      .sidebar { width: 225px; }
+      .main-area { margin-right: 225px; }
+      .stat-card { padding: 15px; }
+    }
+
+    @media (max-width: 800px) {
+      .sidebar {
+        width: 270px;
+        transform: translateX(105%);
+      }
+      .sidebar.open { transform: translateX(0); }
+      .main-area { margin-right: 0; }
+      .topbar { height: 66px; }
+      .page-content { padding: 18px !important; }
+    }
+
+    @media (max-width: 520px) {
+      .page-content { padding: 13px !important; }
+      .stat-card { padding: 13px; }
+      .stat-icon { width: 35px; height: 35px; }
+      .topbar .topbar-subtitle { display: none; }
+      .btn-primary, .btn-secondary { font-size: 11px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<div class="app-shell">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="px-6 py-6 flex items-center gap-3">
+      <div class="brand-mark">
+        <i data-lucide="activity" width="24"></i>
+      </div>
+      <div>
+        <div class="text-lg font-extrabold tracking-tight">Pharma<span class="text-orange">Flow</span></div>
+        <div class="text-[10px] muted font-semibold tracking-wide">SMART SUPPLY CHAIN</div>
+      </div>
+      <button id="closeSidebar" class="mr-auto md:hidden p-2" aria-label="إغلاق القائمة">
+        <i data-lucide="x" width="19"></i>
+      </button>
+    </div>
+
+    <div class="px-5 pb-5">
+      <div class="bg-[#F4F7FB] border border-[#E8EDF3] rounded-xl p-3 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-white grid place-items-center">
+          <i data-lucide="building-2" width="20"></i>
+        </div>
+        <div class="min-w-0">
+          <div class="font-extrabold text-xs">المركز الطبي الرئيسي</div>
+          <div class="text-[10px] muted mt-1">مركز التوزيع · القاهرة</div>
+        </div>
+        <i data-lucide="chevrons-up-down" width="15" class="mr-auto muted"></i>
+      </div>
+    </div>
+
+    <div class="px-6 text-[10px] font-extrabold tracking-wider muted mb-3">القائمة الرئيسية</div>
+
+    <nav class="px-4 space-y-1" aria-label="التنقل الرئيسي">
+      <button class="nav-link active" data-view="dashboard">
+        <i data-lucide="layout-dashboard" class="nav-icon"></i>
+        <span>لوحة التحكم</span>
+      </button>
+      <button class="nav-link" data-view="inventory">
+        <i data-lucide="package-search" class="nav-icon"></i>
+        <span>إدارة المخزون</span>
+        <span id="navAlerts" class="mr-auto bg-[#FFF2E8] text-[#D9652A] rounded-md px-2 py-0.5 text-[10px]">0</span>
+      </button>
+      <button class="nav-link" data-view="dispatch">
+        <i data-lucide="truck" class="nav-icon"></i>
+        <span>الطلبات والشحنات</span>
+      </button>
+      <button class="nav-link" data-view="branches">
+        <i data-lucide="network" class="nav-icon"></i>
+        <span>توزيع الفروع</span>
+      </button>
+      <button class="nav-link" data-view="analytics">
+        <i data-lucide="chart-no-axes-combined" class="nav-icon"></i>
+        <span>التقارير والتحليلات</span>
+      </button>
+    </nav>
+
+    <div class="px-6 mt-8 mb-3 text-[10px] font-extrabold tracking-wider muted">إدارة النظام</div>
+    <div class="px-4 space-y-1">
+      <button class="nav-link" data-view="quality">
+        <i data-lucide="shield-check" class="nav-icon"></i>
+        <span>الجودة وسلامة الأدوية</span>
+      </button>
+      <button class="nav-link" id="exportSidebar">
+        <i data-lucide="file-down" class="nav-icon"></i>
+        <span>تصدير تقرير المخزون</span>
+      </button>
+    </div>
+
+    <div class="mt-auto p-4">
+      <div class="rounded-xl p-4 bg-[#F4F7FB] border border-[#E8EDF3]">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="w-2 h-2 rounded-full bg-mint"></span>
+          <span class="font-extrabold text-xs">مراقبة سلسلة الإمداد</span>
+        </div>
+        <p class="text-[11px] muted leading-6 mb-3">راقب مستويات المخزون وتوقعات التوريد من مكان واحد.</p>
+        <div class="flex items-center justify-between text-[10px]">
+          <span class="muted">حالة النظام</span>
+          <span class="text-mint font-extrabold">تعمل محلياً</span>
+        </div>
+      </div>
+      <div class="mt-4 flex items-center gap-3 px-1">
+        <div class="w-9 h-9 rounded-full bg-[#E5EDF8] grid place-items-center font-extrabold">م</div>
+        <div>
+          <div class="font-extrabold text-xs">مدير الإمداد</div>
+          <div class="muted text-[10px] mt-1">مسؤول النظام التجريبي</div>
+        </div>
+        <i data-lucide="more-horizontal" class="mr-auto muted" width="18"></i>
+      </div>
+    </div>
+  </aside>
+
+  <div id="mobileOverlay" class="mobile-overlay"></div>
+
+  <!-- Main area -->
+  <div class="main-area">
+    <header class="topbar px-4 md:px-7 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <button id="openSidebar" class="p-2 rounded-lg border border-[#E8EDF3] md:hidden" aria-label="فتح القائمة">
+          <i data-lucide="menu" width="19"></i>
+        </button>
+        <div class="min-w-0">
+          <div id="pageTitle" class="font-extrabold text-base md:text-lg">لوحة التحكم</div>
+          <div class="topbar-subtitle text-[10px] md:text-xs muted mt-0.5">نظرة شاملة على أداء شبكة الإمداد الدوائي</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 md:gap-3">
+        <div class="hidden sm:flex items-center gap-2 text-[10px] md:text-xs muted border-l border-[#E8EDF3] pl-3">
+          <i data-lucide="calendar-days" width="16"></i>
+          <span id="currentDate"></span>
+        </div>
+        <button id="alertsButton" class="relative p-2.5 rounded-xl border border-[#E8EDF3] bg-white" aria-label="عرض التنبيهات">
+          <i data-lucide="bell" width="19"></i>
+          <span id="notificationDot" class="absolute top-2 right-2 w-2 h-2 bg-orange rounded-full border-2 border-white"></span>
+        </button>
+        <div class="hidden sm:flex items-center gap-2">
+          <div class="w-9 h-9 rounded-full bg-[#E5EDF8] grid place-items-center font-extrabold">م</div>
+          <i data-lucide="chevron-down" width="15" class="muted"></i>
+        </div>
+      </div>
+    </header>
+
+    <main class="page-content p-7 max-w-[1800px] mx-auto">
+
+      <!-- DASHBOARD -->
+      <section id="view-dashboard" class="section-view active">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="w-2 h-2 rounded-full bg-mint"></span>
+              <span class="text-[11px] text-mint font-extrabold">نظام مراقبة المخزون</span>
+            </div>
+            <h1 class="text-2xl md:text-[28px] font-extrabold leading-relaxed">صباح الخير، مدير الإمداد</h1>
+            <p class="muted text-xs mt-1 leading-6">إليك ملخص حالة المخزون وحركة الشحنات عبر شبكة التوزيع.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button class="btn-secondary" id="refreshButton">
+              <i data-lucide="refresh-cw" width="16"></i>
+              تحديث البيانات
+            </button>
+            <button class="btn-primary" data-go="dispatch">
+              <i data-lucide="plus" width="17"></i>
+              إنشاء طلب توريد
+            </button>
+          </div>
+        </div>
+
+        <!-- KPI cards -->
+        <div class="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4 mb-5">
+          <article class="stat-card">
+            <div class="flex items-center justify-between gap-2 mb-4">
+              <div class="text-xs muted font-bold">أصناف الأدوية</div>
+              <div class="stat-icon bg-[#EDF3FC] text-navy"><i data-lucide="package" width="21"></i></div>
+            </div>
+            <div class="text-2xl md:text-3xl font-extrabold" id="totalMedicines">0</div>
+            <div class="mt-3 text-[10px] muted">إجمالي الأصناف المسجلة</div>
+          </article>
+
+          <article class="stat-card">
+            <div class="flex items-center justify-between gap-2 mb-4">
+              <div class="text-xs muted font-bold">إجمالي الوحدات</div>
+              <div class="stat-icon bg-[#E9F9F1] text-mint"><i data-lucide="boxes" width="21"></i></div>
+            </div>
+            <div class="text-2xl md:text-3xl font-extrabold" id="totalUnits">0</div>
+            <div class="mt-3 text-[10px] text-mint font-bold">الوحدات المتاحة بالمخزون</div>
+          </article>
+
+          <article class="stat-card">
+            <div class="flex items-center justify-between gap-2 mb-4">
+              <div class="text-xs muted font-bold">مخزون يحتاج متابعة</div>
+              <div class="stat-icon bg-[#FFF5D9] text-[#B77900]"><i data-lucide="alert-triangle" width="21"></i></div>
+            </div>
+            <div class="text-2xl md:text-3xl font-extrabold" id="lowStockCount">0</div>
+            <div class="mt-3 text-[10px] text-[#A96A00] font-bold">عند حد الأمان أو أقل</div>
+          </article>
+
+          <article class="stat-card">
+            <div class="flex items-center justify-between gap-2 mb-4">
+              <div class="text-xs muted font-bold">أصناف منتهية</div>
+              <div class="stat-icon bg-[#FFF0F0] text-[#D14343]"><i data-lucide="shield-alert" width="21"></i></div>
+            </div>
+            <div class="text-2xl md:text-3xl font-extrabold" id="expiredCount">0</div>
+            <div class="mt-3 text-[10px] text-[#C33B43] font-bold">تحتاج إلى العزل والمراجعة</div>
+          </article>
+        </div>
+
+        <!-- Chart and lead time -->
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-5">
+          <div class="panel p-5 xl:col-span-2">
+            <div class="flex items-start justify-between gap-3 mb-5">
+              <div>
+                <h2 class="font-extrabold text-sm">حركة المخزون خلال الأسبوع</h2>
+                <p class="muted text-[11px] mt-1">مقارنة استهلاك الأدوية والكميات الواردة</p>
+              </div>
+              <span class="status status-info">بيانات تجريبية</span>
+            </div>
+            <div class="h-[235px] relative">
+              <canvas id="inventoryChart" aria-label="رسم بياني لحركة المخزون"></canvas>
+            </div>
+          </div>
+
+          <div class="panel p-5">
+            <div class="flex items-start justify-between gap-2 mb-4">
+              <div>
+                <h2 class="font-extrabold text-sm">أداء التوريد</h2>
+                <p class="muted text-[11px] mt-1">متوسط زمن وصول الشحنات</p>
+              </div>
+              <div class="stat-icon bg-[#FFF1E9] text-orange"><i data-lucide="timer" width="20"></i></div>
+            </div>
+
+            <div class="flex items-end gap-2 mb-1">
+              <span class="text-4xl font-extrabold" id="avgLeadTime">4.2</span>
+              <span class="muted text-xs mb-2">ساعة</span>
+            </div>
+            <p class="text-[11px] muted mb-5">مؤشر توضيحي لأداء شبكة التوريد التجريبية.</p>
+
+            <div class="space-y-4">
+              <div>
+                <div class="flex justify-between text-[11px] mb-2">
+                  <span class="font-bold">الالتزام بالوقت المستهدف</span>
+                  <span class="font-extrabold" id="onTimePercent">92%</span>
+                </div>
+                <div class="progress-track"><div class="progress-fill bg-mint" style="width:92%" id="onTimeBar"></div></div>
+              </div>
+              <div>
+                <div class="flex justify-between text-[11px] mb-2">
+                  <span class="font-bold">الطلبات الجاري تجهيزها</span>
+                  <span class="font-extrabold" id="pendingCount">0</span>
+                </div>
+                <div class="progress-track"><div class="progress-fill bg-orange" style="width:35%" id="pendingBar"></div></div>
+              </div>
+            </div>
+
+            <button class="btn-secondary w-full mt-5" data-go="analytics">
+              عرض تحليل الأداء
+              <i data-lucide="arrow-left" width="15"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Alerts + urgent orders -->
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-5">
+          <div class="panel p-5">
+            <div class="flex items-center justify-between mb-2">
+              <h2 class="font-extrabold text-sm">مركز التنبيهات</h2>
+              <button class="text-orange text-[11px] font-extrabold" data-go="inventory">عرض المخزون</button>
+            </div>
+            <div id="dashboardAlerts"></div>
+          </div>
+
+          <div class="panel xl:col-span-2">
+            <div class="p-5 flex items-center justify-between gap-3">
+              <div>
+                <h2 class="font-extrabold text-sm">آخر الشحنات والطلبات</h2>
+                <p class="muted text-[11px] mt-1">متابعة العمليات المسجلة في النظام</p>
+              </div>
+              <button class="btn-secondary" data-go="dispatch">كل الطلبات</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>رقم الطلب</th>
+                    <th>الصنف</th>
+                    <th>الفرع المستلم</th>
+                    <th>وقت الوصول</th>
+                    <th>الحالة</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboardOrders"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel p-5">
+          <div class="flex items-center justify-between gap-3 mb-4">
+            <div>
+              <h2 class="font-extrabold text-sm">مؤشر جاهزية المخزون</h2>
+              <p class="muted text-[11px] mt-1">مقارنة الكميات الحالية بحدود الأمان المحددة لكل صنف</p>
+            </div>
+            <button class="text-orange font-extrabold text-[11px]" data-go="inventory">إدارة الأصناف ←</button>
+          </div>
+          <div id="stockOverview" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5"></div>
+        </div>
+      </section>
+
+      <!-- INVENTORY -->
+      <section id="view-inventory" class="section-view">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h1 class="text-2xl font-extrabold">إدارة المخزون الذكي</h1>
+            <p class="muted mt-2 text-xs">مراقبة الكميات وحدود الأمان والصلاحية لكل صنف.</p>
+          </div>
+          <div class="flex gap-2 flex-wrap">
+            <button class="btn-secondary" id="inventoryExport">
+              <i data-lucide="download" width="16"></i> تصدير CSV
+            </button>
+            <button class="btn-primary" id="addMedicineButton">
+              <i data-lucide="plus" width="16"></i> إضافة صنف
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
+          <div class="panel p-4">
+            <div class="muted text-[11px] mb-2">عدد الأصناف</div>
+            <div class="text-2xl font-extrabold" id="invTotal">0</div>
+          </div>
+          <div class="panel p-4">
+            <div class="muted text-[11px] mb-2">متوفر</div>
+            <div class="text-2xl font-extrabold text-mint" id="invHealthy">0</div>
+          </div>
+          <div class="panel p-4">
+            <div class="muted text-[11px] mb-2">تحت حد الأمان</div>
+            <div class="text-2xl font-extrabold text-[#B77900]" id="invLow">0</div>
+          </div>
+          <div class="panel p-4">
+            <div class="muted text-[11px] mb-2">منتهي الصلاحية</div>
+            <div class="text-2xl font-extrabold text-[#C33B43]" id="invExpired">0</div>
+          </div>
+        </div>
+
+        <div class="panel overflow-hidden">
+          <div class="p-4 md:p-5 border-b border-[#E8EDF3] flex flex-col lg:flex-row gap-3 lg:items-center justify-between">
+            <div class="relative w-full lg:max-w-sm">
+              <i data-lucide="search" width="17" class="absolute right-3 top-1/2 -translate-y-1/2 muted"></i>
+              <input id="inventorySearch" class="field pr-10" placeholder="ابحث باسم الدواء أو الفئة..." aria-label="البحث في المخزون">
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <select id="categoryFilter" class="field w-auto min-w-[130px]" aria-label="تصفية الفئة">
+                <option value="all">كل الفئات</option>
+                <option value="مسكنات">مسكنات</option>
+                <option value="مضادات حيوية">مضادات حيوية</option>
+                <option value="طوارئ">طوارئ</option>
+                <option value="محاليل">محاليل</option>
+                <option value="أمراض مزمنة">أمراض مزمنة</option>
+              </select>
+              <select id="statusFilter" class="field w-auto min-w-[135px]" aria-label="تصفية حالة المخزون">
+                <option value="all">كل الحالات</option>
+                <option value="healthy">متوفر</option>
+                <option value="low">منخفض</option>
+                <option value="critical">حرج</option>
+                <option value="expired">منتهي</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>الدواء / الفئة</th>
+                  <th>الكمية الحالية</th>
+                  <th>حد الأمان</th>
+                  <th>مستوى المخزون</th>
+                  <th>تاريخ الصلاحية</th>
+                  <th>الحالة</th>
+                  <th>الإجراء</th>
+                </tr>
+              </thead>
+              <tbody id="inventoryTable"></tbody>
+            </table>
+          </div>
+          <div id="inventoryEmpty" class="empty-state" hidden>
+            <i data-lucide="search-x" width="28" class="mx-auto mb-3"></i>
+            لا توجد أصناف مطابقة لعملية البحث.
+          </div>
+          <div class="px-5 py-4 border-t border-[#E8EDF3] flex justify-between gap-3 text-[11px] muted">
+            <span id="inventoryCountText">عرض 0 صنف</span>
+            <span>تُحدّث التنبيهات تلقائياً مع تغيّر البيانات.</span>
+          </div>
+        </div>
+
+        <div class="mt-5 panel p-5">
+          <div class="flex items-start gap-3">
+            <div class="stat-icon bg-[#FFF5D9] text-[#A96A00]">
+              <i data-lucide="lightbulb" width="20"></i>
+            </div>
+            <div>
+              <h3 class="font-extrabold text-sm">كيف يعمل مخزون الأمان؟</h3>
+              <p class="muted text-xs leading-7 mt-2">
+                يقارن النظام الرصيد المتاح بحد الأمان المحدد لكل صنف. عند الوصول إلى الحد أو النزول عنه يظهر تنبيه لإعادة التوريد.
+                الأدوية المنتهية تحتاج إلى العزل والمراجعة، ولا ينبغي إتاحتها للصرف.
+                هذه بيانات تجريبية لأغراض العرض وليست توصية طبية أو قرار صرف.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DISPATCH -->
+      <section id="view-dispatch" class="section-view">
+        <div class="mb-6">
+          <h1 class="text-2xl font-extrabold">الطلبات والشحنات</h1>
+          <p class="muted mt-2 text-xs">إنشاء طلب توريد تجريبي ومحاكاة مراحل تجهيز الشحنة وتسليمها.</p>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-5 gap-5">
+          <div class="panel p-5 xl:col-span-2">
+            <div class="flex items-center gap-3 mb-5">
+              <div class="stat-icon bg-[#FFF1E9] text-orange"><i data-lucide="package-plus" width="21"></i></div>
+              <div>
+                <h2 class="font-extrabold text-sm">إنشاء طلب توريد جديد</h2>
+                <p class="muted text-[11px] mt-1">املأ البيانات لمحاكاة عملية الإرسال.</p>
+              </div>
+            </div>
+
+            <form id="dispatchForm" class="space-y-4">
+              <div>
+                <label for="dispatchMedicine" class="field-label">الدواء المطلوب</label>
+                <select id="dispatchMedicine" class="field" required></select>
+              </div>
+              <div>
+                <label for="dispatchQuantity" class="field-label">الكمية المطلوبة (وحدة)</label>
+                <input id="dispatchQuantity" type="number" class="field" min="1" max="1000000" value="100" required>
+              </div>
+              <div>
+                <label for="dispatchBranch" class="field-label">الفرع الطالب</label>
+                <select id="dispatchBranch" class="field" required>
+                  <option value="مستشفى مدينة نصر">مستشفى مدينة نصر</option>
+                  <option value="مستشفى المعادي">مستشفى المعادي</option>
+                  <option value="مستشفى الجيزة">مستشفى الجيزة</option>
+                  <option value="مستشفى الإسكندرية">مستشفى الإسكندرية</option>
+                </select>
+              </div>
+              <div>
+                <label for="dispatchWarehouse" class="field-label">المخزن الرئيسي المورّد</label>
+                <select id="dispatchWarehouse" class="field" required>
+                  <option value="المخزن المركزي - القاهرة">المخزن المركزي - القاهرة</option>
+                  <option value="مخزن التوزيع - الجيزة">مخزن التوزيع - الجيزة</option>
+                  <option value="مخزن التوزيع - الإسكندرية">مخزن التوزيع - الإسكندرية</option>
+                </select>
+              </div>
+              <div>
+                <label for="dispatchPriority" class="field-label">أولوية الطلب</label>
+                <select id="dispatchPriority" class="field">
+                  <option value="normal">عادي</option>
+                  <option value="urgent">عاجل</option>
+                  <option value="critical">طارئ جداً</option>
+                </select>
+              </div>
+
+              <div class="rounded-xl bg-[#F7F9FC] border border-[#E8EDF3] p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-xs font-bold">تقدير وقت الوصول</span>
+                  <span class="text-orange font-extrabold" id="estimatedTime">—</span>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label for="routeDistance" class="field-label">المسافة (كم)</label>
+                    <input id="routeDistance" class="field" type="number" min="1" max="2000" value="18" required>
+                  </div>
+                  <div>
+                    <label for="trafficLevel" class="field-label">حالة الطريق</label>
+                    <select id="trafficLevel" class="field">
+                      <option value="1">طبيعي</option>
+                      <option value="1.35">متوسط الازدحام</option>
+                      <option value="1.8">ازدحام شديد</option>
+                    </select>
+                  </div>
+                </div>
+                <p class="muted text-[10px] leading-5 mt-3">تقدير توضيحي بسرعة افتراضية 30 كم/ساعة، مع وقت تجهيز إضافي. ليس تكاملاً مع خرائط أو بيانات مرور حية.</p>
+              </div>
+
+              <button class="btn-primary w-full py-3" type="submit">
+                <i data-lucide="send" width="17"></i>
+                تسجيل الطلب وبدء المحاكاة
+              </button>
+            </form>
+          </div>
+
+          <div class="xl:col-span-3 space-y-5">
+            <div class="panel p-5">
+              <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+                <div>
+                  <h2 class="font-extrabold text-sm">تتبع رحلة الشحنة</h2>
+                  <p class="muted text-[11px] mt-1" id="trackingSubtitle">أنشئ طلباً لعرض تفاصيل الرحلة.</p>
+                </div>
+                <span class="status status-info" id="trackingStatus">بانتظار الطلب</span>
+              </div>
+
+              <div class="flex items-center gap-2 md:gap-4 mb-6" id="trackingSteps">
+                <div class="step-dot"><i data-lucide="clipboard-check" width="15"></i></div>
+                <div class="timeline-line"></div>
+                <div class="step-dot"><i data-lucide="package" width="15"></i></div>
+                <div class="timeline-line"></div>
+                <div class="step-dot"><i data-lucide="truck" width="15"></i></div>
+                <div class="timeline-line"></div>
+                <div class="step-dot"><i data-lucide="check" width="15"></i></div>
+              </div>
+
+              <div class="grid grid-cols-4 gap-1 text-center mb-6">
+                <div><div class="font-extrabold text-[10px] md:text-xs">تسجيل الطلب</div><div class="muted text-[9px] mt-1">Order placed</div></div>
+                <div><div class="font-extrabold text-[10px] md:text-xs">التجهيز</div><div class="muted text-[9px] mt-1">Processing</div></div>
+                <div><div class="font-extrabold text-[10px] md:text-xs">في الطريق</div><div class="muted text-[9px] mt-1">In transit</div></div>
+                <div><div class="font-extrabold text-[10px] md:text-xs">تم التسليم</div><div class="muted text-[9px] mt-1">Delivered</div></div>
+              </div>
+
+              <div class="border-t border-[#E8EDF3] pt-5">
+                <div class="flex items-center justify-between text-xs mb-3">
+                  <span class="font-bold">تقدم الشحنة</span>
+                  <span class="font-extrabold text-orange" id="trackingPercent">0%</span>
+                </div>
+                <div class="progress-track h-2"><div id="trackingProgress" class="progress-fill bg-orange" style="width:0%"></div></div>
+                <div class="flex justify-between mt-3 text-[10px] muted gap-3">
+                  <span id="trackingDetail">لا توجد شحنة نشطة.</span>
+                  <span id="trackingETA">—</span>
+                </div>
+              </div>
+
+              <div class="mt-5 flex gap-2 flex-wrap">
+                <button class="btn-secondary" id="advanceShipment" disabled>
+                  <i data-lucide="fast-forward" width="16"></i> المرحلة التالية
+                </button>
+                <button class="btn-secondary" id="completeShipment" disabled>
+                  <i data-lucide="check-check" width="16"></i> إتمام التسليم
+                </button>
+              </div>
+              <p class="muted text-[10px] mt-3 leading-5">المحاكاة يدوية حتى تتمكن من عرض كل مرحلة أثناء تقديم المشروع.</p>
+            </div>
+
+            <div class="panel overflow-hidden">
+              <div class="p-5 flex items-center justify-between gap-3">
+                <div>
+                  <h2 class="font-extrabold text-sm">سجل الشحنات</h2>
+                  <p class="muted text-[11px] mt-1">الطلبات المسجلة خلال جلسة الاستخدام الحالية</p>
+                </div>
+                <span class="status status-info" id="ordersBadge">0 طلب</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>رقم الطلب</th><th>الدواء</th><th>الفرع</th><th>الكمية</th><th>الحالة</th><th>التتبع</th></tr>
+                  </thead>
+                  <tbody id="ordersTable"></tbody>
+                </table>
+              </div>
+              <div id="ordersEmpty" class="empty-state" hidden>لا توجد طلبات مسجلة بعد.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BRANCHES -->
+      <section id="view-branches" class="section-view">
+        <div class="mb-6">
+          <h1 class="text-2xl font-extrabold">إعادة التوزيع بين الفروع</h1>
+          <p class="muted mt-2 text-xs">اكتشف الفروع التي لديها فائض واقترح نقل الكميات لتغطية العجز.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+          <div class="stat-card">
+            <div class="stat-icon bg-[#EDF3FC] text-navy mb-4"><i data-lucide="network" width="21"></i></div>
+            <div class="muted text-xs">الفروع في النموذج</div>
+            <div class="text-3xl font-extrabold mt-2">4</div>
+            <div class="muted text-[10px] mt-2">بيانات مواقع افتراضية</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon bg-[#E9F9F1] text-mint mb-4"><i data-lucide="arrow-left-right" width="21"></i></div>
+            <div class="muted text-xs">مبدأ النقل الجانبي</div>
+            <div class="text-xl font-extrabold mt-2">Lateral Transshipment</div>
+            <div class="muted text-[10px] mt-2">تغطية العجز من فرع لديه فائض</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon bg-[#FFF1E9] text-orange mb-4"><i data-lucide="clock" width="21"></i></div>
+            <div class="muted text-xs">هدف العملية</div>
+            <div class="text-xl font-extrabold mt-2">تقليل زمن التوريد</div>
+            <div class="muted text-[10px] mt-2">وفق المسافة والكمية المتاحة</div>
+          </div>
+        </div>
+
+        <div class="panel p-5 mb-5">
+          <h2 class="font-extrabold text-sm mb-1">محرك اقتراح إعادة التوزيع</h2>
+          <p class="muted text-[11px] mb-5">اختر الصنف والفرع المحتاج، ثم اعرض الاقتراحات التجريبية.</p>
+          <form id="reallocationForm" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            <div>
+              <label class="field-label" for="reallocationMedicine">الصنف الدوائي</label>
+              <select class="field" id="reallocationMedicine" required></select>
+            </div>
+            <div>
+              <label class="field-label" for="reallocationBranch">الفرع المحتاج</label>
+              <select class="field" id="reallocationBranch" required>
+                <option>مستشفى مدينة نصر</option>
+                <option>مستشفى المعادي</option>
+                <option>مستشفى الجيزة</option>
+                <option>مستشفى الإسكندرية</option>
+              </select>
+            </div>
+            <div>
+              <button class="btn-primary w-full" type="submit">
+                <i data-lucide="search" width="16"></i> تحليل فرص النقل
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div id="reallocationResults" class="space-y-3">
+          <div class="panel empty-state">اختر الدواء والفرع لعرض فرص إعادة التوزيع.</div>
+        </div>
+
+        <div class="panel p-5 mt-5">
+          <div class="flex gap-3 items-start">
+            <div class="stat-icon bg-[#EDF3FC] text-navy"><i data-lucide="info" width="20"></i></div>
+            <div>
+              <h3 class="font-extrabold text-sm">المنطق اللوجستي</h3>
+              <p class="muted text-xs leading-7 mt-2">
+                يوضح النموذج فكرة النقل الجانبي (Lateral Transshipment): نقل وحدات من فرع لديه فائض إلى فرع يعاني من نقص.
+                في التشغيل الحقيقي يجب التحقق من الصلاحية والتشغيلة وشروط النقل وسلامة سلسلة التبريد، ثم اعتماد المسؤول قبل التنفيذ.
+                الأرصدة هنا افتراضية، ولا تمثل بيانات مخازن حقيقية.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ANALYTICS -->
+      <section id="view-analytics" class="section-view">
+        <div class="mb-6">
+          <h1 class="text-2xl font-extrabold">التقارير والتحليلات</h1>
+          <p class="muted mt-2 text-xs">مؤشرات تشغيلية لمتابعة مستويات المخزون وحركة الإمداد.</p>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-5">
+          <div class="panel p-5">
+            <h2 class="font-extrabold text-sm">توزيع حالات المخزون</h2>
+            <p class="muted text-[11px] mt-1 mb-5">توزيع الأصناف وفق حد الأمان وتاريخ الصلاحية</p>
+            <div class="relative h-[280px]"><canvas id="statusChart"></canvas></div>
+          </div>
+          <div class="panel p-5">
+            <h2 class="font-extrabold text-sm">حركة المخزون الأسبوعية</h2>
+            <p class="muted text-[11px] mt-1 mb-5">وحدات واردة مقابل وحدات مصروفة — بيانات نموذجية</p>
+            <div class="relative h-[280px]"><canvas id="analyticsChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="panel p-5">
+          <div class="flex items-center justify-between gap-3 mb-4">
+            <div>
+              <h2 class="font-extrabold text-sm">ملخص المؤشرات</h2>
+              <p class="muted text-[11px] mt-1">تتحدث المؤشرات المرتبطة بالمخزون عند تعديل البيانات.</p>
+            </div>
+            <button class="btn-secondary" id="analyticsExport"><i data-lucide="download" width="15"></i> تصدير</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>المؤشر</th><th>القيمة</th><th>التفسير</th></tr></thead>
+              <tbody id="analyticsTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- QUALITY -->
+      <section id="view-quality" class="section-view">
+        <div class="mb-6">
+          <h1 class="text-2xl font-extrabold">الجودة وسلامة الأدوية</h1>
+          <p class="muted mt-2 text-xs">مبادئ متابعة الصلاحية والتخزين الآمن وسلسلة التبريد.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+          <div class="stat-card">
+            <div class="stat-icon bg-[#E9F9F1] text-mint mb-4"><i data-lucide="shield-check" width="21"></i></div>
+            <h2 class="font-extrabold text-sm">مراجعة الصلاحية</h2>
+            <p class="muted text-xs leading-6 mt-2">مراقبة تواريخ انتهاء الأصناف والتنبيه للمراجعة والعزل عند الانتهاء.</p>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon bg-[#EDF3FC] text-navy mb-4"><i data-lucide="thermometer" width="21"></i></div>
+            <h2 class="font-extrabold text-sm">سلسلة التبريد</h2>
+            <p class="muted text-xs leading-6 mt-2">يجب الالتزام بدرجات الحرارة المحددة من الشركة المصنّعة، مع تسجيل ومراقبة مستمرة أثناء النقل.</p>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon bg-[#FFF5D9] text-[#A96A00] mb-4"><i data-lucide="clipboard-check" width="21"></i></div>
+            <h2 class="font-extrabold text-sm">توثيق الاستلام</h2>
+            <p class="muted text-xs leading-6 mt-2">تسجيل الكميات والتشغيلات وحالة العبوات وبيانات التسليم عند استلام الشحنة.</p>
+          </div>
+        </div>
+
+        <div class="panel p-5 mb-5">
+          <h2 class="font-extrabold text-sm mb-4">مراجعة أصناف تحتاج إلى الانتباه</h2>
+          <div id="qualityTable" class="table-wrap"></div>
+        </div>
+
+        <div class="panel p-5">
+          <div class="flex gap-3 items-start">
+            <div class="stat-icon bg-[#EDF3FC] text-navy"><i data-lucide="file-check-2" width="20"></i></div>
+            <div>
+              <h3 class="font-extrabold text-sm">ملاحظة امتثال مهمة</h3>
+              <p class="muted text-xs leading-7 mt-2">
+                هذا نموذج واجهة تعليمية، وليس نظام امتثال معتمداً. لا توجد شهادات جودة فعلية أو أجهزة مراقبة متصلة.
+                قبل الاستخدام الواقعي يلزم ربط النظام بمصادر بيانات موثوقة وتطبيق إجراءات الصيدلة والجودة والخصوصية المعتمدة،
+                مع مراجعة المسؤول المختص لجميع التنبيهات والقرارات التشغيلية.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="pt-7 pb-3 mt-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] muted">
+        <span>© 2026 PharmaFlow · منصة إدارة الإمداد الدوائي</span>
+        <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-mint"></span> واجهة تجريبية تعمل داخل المتصفح</span>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast" role="status" aria-live="polite" hidden>
+  <i data-lucide="check-circle-2" width="20" id="toastIcon"></i>
+  <span id="toastMessage"></span>
+</div>
+
+<!-- Add medicine dialog -->
+<div id="medicineModal" class="fixed inset-0 z-[80] bg-[#0F2C5966] p-4 items-center justify-center" style="display:none" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="bg-white rounded-2xl p-5 md:p-6 w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between gap-3 mb-5">
+      <div>
+        <h2 id="modalTitle" class="font-extrabold text-lg">إضافة صنف جديد</h2>
+        <p class="muted text-xs mt-1">أدخل بيانات الصنف وحد الأمان.</p>
+      </div>
+      <button id="closeMedicineModal" class="p-2 rounded-lg bg-[#F4F7FB]" aria-label="إغلاق">
+        <i data-lucide="x" width="18"></i>
+      </button>
+    </div>
+
+    <form id="medicineForm" class="space-y-4">
+      <div>
+        <label class="field-label" for="newMedicineName">اسم الدواء</label>
+        <input id="newMedicineName" class="field" maxlength="100" required placeholder="اسم الصنف">
+      </div>
+      <div>
+        <label class="field-label" for="newMedicineCategory">الفئة</label>
+        <select id="newMedicineCategory" class="field" required>
+          <option>مسكنات</option>
+          <option>مضادات حيوية</option>
+          <option>طوارئ</option>
+          <option>محاليل</option>
+          <option>أمراض مزمنة</option>
+        </select>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="field-label" for="newMedicineStock">الكمية الحالية</label>
+          <input id="newMedicineStock" class="field" type="number" min="0" max="1000000" required value="100">
+        </div>
+        <div>
+          <label class="field-label" for="newMedicineSafety">حد الأمان</label>
+          <input id="newMedicineSafety" class="field" type="number" min="1" max="1000000" required value="50">
+        </div>
+      </div>
+      <div>
+        <label class="field-label" for="newMedicineExpiry">تاريخ الصلاحية</label>
+        <input id="newMedicineExpiry" class="field" type="date" required>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button class="btn-primary flex-1" type="submit">حفظ الصنف</button>
+        <button class="btn-secondary" type="button" id="cancelMedicine">إلغاء</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // -------------------------------------------------------
+  // 1. بيانات نموذجية — استبدلها ببيانات حقيقية عند الربط
+  // -------------------------------------------------------
+
+  const today = new Date();
+  const dateOffset = days => {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return d.getFullYear() + '-' +
+      String(d.getMonth() + 1).padStart(2, '0') + '-' +
+      String(d.getDate()).padStart(2, '0');
+  };
+
+  let medicines = [
+    {id: 1, name: 'باراسيتامول 500 مجم', category: 'مسكنات', stock: 1250, safety: 500, expiry: dateOffset(240)},
+    {id: 2, name: 'أموكسيسيلين 500 مجم', category: 'مضادات حيوية', stock: 180, safety: 250, expiry: dateOffset(180)},
+    {id: 3, name: 'محلول ملحي 0.9%', category: 'محاليل', stock: 80, safety: 200, expiry: dateOffset(90)},
+    {id: 4, name: 'إبينفرين للطوارئ', category: 'طوارئ', stock: 35, safety: 100, expiry: dateOffset(150)},
+    {id: 5, name: 'ميتفورمين 500 مجم', category: 'أمراض مزمنة', stock: 780, safety: 300, expiry: dateOffset(300)},
+    {id: 6, name: 'سيفترياكسون 1 جم', category: 'مضادات حيوية', stock: 420, safety: 200, expiry: dateOffset(120)},
+    {id: 7, name: 'إيبوبروفين 400 مجم', category: 'مسكنات', stock: 90, safety: 150, expiry: dateOffset(210)},
+    {id: 8, name: 'محلول جلوكوز 5%', category: 'محاليل', stock: 310, safety: 150, expiry: dateOffset(270)},
+    {id: 9, name: 'أتروبين للطوارئ', category: 'طوارئ', stock: 0, safety: 40, expiry: dateOffset(-10)}
+  ];
+
+  // بيانات الفروع افتراضية، مستقلة عن المخزون الرئيسي.
+  const branchStock = [
+    {name:'مستشفى مدينة نصر', distance:8, stock:{1:250,2:30,3:35,4:5,5:180,6:100,7:40,8:90,9:0}},
+    {name:'مستشفى المعادي', distance:14, stock:{1:800,2:500,3:400,4:250,5:650,6:350,7:300,8:450,9:80}},
+    {name:'مستشفى الجيزة', distance:12, stock:{1:350,2:90,3:60,4:25,5:200,6:220,7:75,8:180,9:10}},
+    {name:'مستشفى الإسكندرية', distance:220, stock:{1:900,2:350,3:280,4:180,5:500,6:400,7:260,8:320,9:60}}
+  ];
+
+  let orders = [
+    {id:'PF-1024', medicineId:6, branch:'مستشفى مدينة نصر', quantity:100, eta:3.4, priority:'normal', stage:3},
+    {id:'PF-1023', medicineId:3, branch:'مستشفى الجيزة', quantity:150, eta:2.1, priority:'urgent', stage:2},
+    {id:'PF-1022', medicineId:1, branch:'مستشفى المعادي', quantity:200, eta:1.8, priority:'normal', stage:4}
+  ];
+
+  let nextMedicineId = 10;
+  let nextOrderNumber = 1025;
+  let activeOrderId = null;
+  let toastTimeout = null;
+  let chartInstances = {};
+  let currentView = 'dashboard';
+
+  const titles = {
+    dashboard: 'لوحة التحكم',
+    inventory: 'إدارة المخزون',
+    dispatch: 'الطلبات والشحنات',
+    branches: 'توزيع الفروع',
+    analytics: 'التقارير والتحليلات',
+    quality: 'الجودة وسلامة الأدوية'
+  };
+
+  const $ = id => document.getElementById(id);
+  const num = n => new Intl.NumberFormat('ar-EG').format(n);
+  const esc = value => String(value).replace(/[&<>"']/g, ch => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+  })[ch]);
+
+  function medicineById(id) {
+    return medicines.find(m => m.id === Number(id));
+  }
+
+  function isExpired(m) {
+    return m.expiry < dateOffset(0);
+  }
+
+  function isNearExpiry(m) {
+    return !isExpired(m) && m.expiry <= dateOffset(30);
+  }
+
+  function stockStatus(m) {
+    if (isExpired(m)) return 'expired';
+    if (m.stock === 0) return 'critical';
+    if (m.stock <= m.safety) return 'low';
+    return 'healthy';
+  }
+
+  function statusLabel(status) {
+    return ({
+      healthy: 'متوفر',
+      low: 'منخفض',
+      critical: 'حرج',
+      expired: 'منتهي'
+    })[status];
+  }
+
+  function statusClass(status) {
+    return ({
+      healthy: 'status-ok',
+      low: 'status-warn',
+      critical: 'status-danger',
+      expired: 'status-danger'
+    })[status];
+  }
+
+  function orderStatus(stage) {
+    return [
+      'تم تسجيل الطلب',
+      'جاري التجهيز',
+      'في الطريق',
+      'تم التسليم'
+    ][Math.max(0, Math.min(3, stage - 1))];
+  }
+
+  function orderStatusClass(stage) {
+    if (stage === 4) return 'status-ok';
+    if (stage === 3) return 'status-info';
+    return 'status-warn';
+  }
+
+  function showToast(message, error = false) {
+    $('toastMessage').textContent = message;
+    $('toast').classList.toggle('error', error);
+    $('toast').hidden = false;
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => { $('toast').hidden = true; }, 3200);
+  }
+
+  function renderIcons() {
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function navigate(view) {
+    if (!titles[view]) return;
+    currentView = view;
+
+    document.querySelectorAll('.section-view').forEach(section => {
+      section.classList.toggle('active', section.id === 'view-' + view);
+    });
+
+    document.querySelectorAll('.nav-link[data-view]').forEach(link => {
+      link.classList.toggle('active', link.dataset.view === view);
+    });
+
+    $('pageTitle').textContent = titles[view];
+    $('sidebar').classList.remove('open');
+    $('mobileOverlay').classList.remove('show');
+
+    if (view === 'analytics') renderAnalytics();
+    if (view === 'quality') renderQuality();
+
+    renderIcons();
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  }
+
+  // -------------------------------------------------------
+  // 2. لوحة التحكم ومؤشرات الأداء
+  // -------------------------------------------------------
+
+  function getAlerts() {
+    const alerts = [];
+
+    medicines.forEach(m => {
+      const status = stockStatus(m);
+
+      if (status === 'expired') {
+        alerts.push({
+          level: 'danger',
+          title: 'صنف منتهي الصلاحية',
+          detail: m.name + ' — يجب عزله ومراجعته.',
+          id: m.id
+        });
+      } else if (status === 'critical') {
+        alerts.push({
+          level: 'danger',
+          title: 'نفاد المخزون',
+          detail: m.name + ' — الرصيد صفر.',
+          id: m.id
+        });
+      } else if (status === 'low') {
+        alerts.push({
+          level: 'warning',
+          title: 'انخفاض مخزون الأمان',
+          detail: m.name + ' — المتاح ' + num(m.stock) + ' وحدة.',
+          id: m.id
+        });
+      }
+
+      if (isNearExpiry(m)) {
+        alerts.push({
+          level: 'warning',
+          title: 'اقتراب انتهاء الصلاحية',
+          detail: m.name + ' — راجع خطة الصرف والتوريد.',
+          id: m.id
+        });
+      }
+    });
+
+    return alerts;
+  }
+
+  function renderDashboard() {
+    const totalUnits = medicines.reduce((sum, m) => sum + m.stock, 0);
+    const low = medicines.filter(m => ['low','critical'].includes(stockStatus(m))).length;
+    const expired = medicines.filter(m => stockStatus(m) === 'expired').length;
+    const alerts = getAlerts();
+
+    $('totalMedicines').textContent = num(medicines.length);
+    $('totalUnits').textContent = num(totalUnits);
+    $('lowStockCount').textContent = num(low);
+    $('expiredCount').textContent = num(expired);
+    $('navAlerts').textContent = num(low + expired);
+    $('notificationDot').style.display = alerts.length ? 'block' : 'none';
+
+    const activeOrders = orders.filter(o => o.stage < 4).length;
+    $('pendingCount').textContent = num(activeOrders);
+    $('pendingBar').style.width = Math.min(100, activeOrders * 20) + '%';
+
+    const delivered = orders.filter(o => o.stage === 4);
+    const lead = delivered.length
+      ? delivered.reduce((s,o) => s + o.eta, 0) / delivered.length
+      : 4.2;
+    $('avgLeadTime').textContent = lead.toFixed(1);
+
+    $('onTimePercent').textContent = '92%';
+    $('onTimeBar').style.width = '92%';
+
+    const alertContainer = $('dashboardAlerts');
+    if (!alerts.length) {
+      alertContainer.innerHTML =
+        '<div class="empty-state"><p class="font-bold">لا توجد تنبيهات حالياً</p></div>';
+    } else {
+      alertContainer.innerHTML = alerts.slice(0, 5).map(a => `
+        <div class="alert-row">
+          <div class="alert-symbol ${a.level === 'danger' ? 'bg-[#FFF0F0] text-[#C33B43]' : 'bg-[#FFF5D9] text-[#A96A00]'}">
+            <i data-lucide="${a.level === 'danger' ? 'alert-circle' : 'alert-triangle'}" width="18"></i>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="font-extrabold text-xs">${esc(a.title)}</div>
+            <p class="muted text-[10px] leading-5 mt-1">${esc(a.detail)}</p>
+          </div>
+          <button class="text-orange text-[10px] font-extrabold" data-inspect="${a.id}">عرض</button>
+        </div>
+      `).join('');
+    }
+
+    $('dashboardOrders').innerHTML = orders.slice(0, 4).map(o => {
+      const m = medicineById(o.medicineId);
+      return `
+        <tr>
+          <td class="font-extrabold">${esc(o.id)}</td>
+          <td>${esc(m ? m.name : 'صنف محذوف')}</td>
+          <td>${esc(o.branch)}</td>
+          <td>${o.stage === 4 ? 'تم التسليم' : num(o.eta) + ' ساعة'}</td>
+          <td><span class="status ${orderStatusClass(o.stage)}">${orderStatus(o.stage)}</span></td>
+        </tr>
+      `;
+    }).join('') || '<tr><td colspan="5" class="text-center muted">لا توجد طلبات.</td></tr>';
+
+    $('stockOverview').innerHTML = medicines.slice(0, 6).map(m => {
+      const status = stockStatus(m);
+      const ratio = Math.min(100, m.safety > 0 ? m.stock / m.safety * 100 : 100);
+      const color = status === 'healthy' ? 'bg-mint' :
+        status === 'low' ? 'bg-[#E9A23B]' : 'bg-[#D14343]';
+
+      return `
+        <div>
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <span class="font-extrabold text-xs truncate">${esc(m.name)}</span>
+            <span class="status ${statusClass(status)}">${statusLabel(status)}</span>
+          </div>
+          <div class="flex justify-between text-[10px] muted mb-2">
+            <span>المتاح: ${num(m.stock)}</span>
+            <span>حد الأمان: ${num(m.safety)}</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill ${color}" style="width:${ratio}%"></div></div>
+        </div>
+      `;
+    }).join('');
+
+    renderChart('inventoryChart', 'line', {
+      labels: ['السبت','الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة'],
+      datasets: [
+        {
+          label: 'الوارد',
+          data: [210,300,250,380,290,420,350],
+          borderColor: '#10B981',
+          backgroundColor: '#10B98118',
+          fill: true,
+          tension: .35
+        },
+        {
+          label: 'المصروف',
+          data: [180,240,280,250,310,330,290],
+          borderColor: '#FF7F3E',
+          backgroundColor: '#FF7F3E10',
+          fill: true,
+          tension: .35
+        }
+      ]
+    });
+
+    renderIcons();
+  }
+
+  // -------------------------------------------------------
+  // 3. إدارة المخزون والبحث والتصفية
+  // -------------------------------------------------------
+
+  function renderInventory() {
+    const q = $('inventorySearch').value.trim().toLocaleLowerCase();
+    const category = $('categoryFilter').value;
+    const statusFilter = $('statusFilter').value;
+
+    $('invTotal').textContent = num(medicines.length);
+    $('invHealthy').textContent = num(medicines.filter(m => stockStatus(m) === 'healthy').length);
+    $('invLow').textContent = num(medicines.filter(m => ['low','critical'].includes(stockStatus(m))).length);
+    $('invExpired').textContent = num(medicines.filter(m => isExpired(m)).length);
+
+    const filtered = medicines.filter(m => {
+      const matchesText = (m.name + ' ' + m.category).toLocaleLowerCase().includes(q);
+      const matchesCategory = category === 'all' || m.category === category;
+      const matchesStatus = statusFilter === 'all' || stockStatus(m) === statusFilter;
+      return matchesText && matchesCategory && matchesStatus;
+    });
+
+    $('inventoryTable').innerHTML = filtered.map(m => {
+      const status = stockStatus(m);
+      const ratio = Math.min(100, m.stock / Math.max(1, m.safety) * 100);
+      const color = status === 'healthy' ? '#10B981' :
+        status === 'low' ? '#E9A23B' : '#D14343';
+
+      return `
+        <tr>
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="medicine-symbol"><i data-lucide="pill" width="18"></i></div>
+              <div>
+                <div class="font-extrabold text-xs">${esc(m.name)}</div>
+                <div class="muted text-[10px] mt-1">${esc(m.category)} · #${m.id}</div>
+              </div>
+            </div>
+          </td>
+          <td class="font-extrabold">${num(m.stock)} <span class="muted font-normal text-[10px]">وحدة</span></td>
+          <td>${num(m.safety)}</td>
+          <td>
+            <div class="min-w-[110px]">
+              <div class="progress-track"><div class="progress-fill" style="width:${ratio}%;background:${color}"></div></div>
+              <div class="muted text-[10px] mt-1">${Math.round(ratio)}% من حد الأمان</div>
+            </div>
+          </td>
+          <td>${esc(m.expiry)}</td>
+          <td>
+            <span class="status ${statusClass(status)}">${statusLabel(status)}</span>
+            ${isNearExpiry(m) ? '<div class="text-[9px] text-[#A96A00] mt-1">صلاحية قريبة</div>' : ''}
+          </td>
+          <td>
+            <button class="btn-secondary !p-2" data-restock="${m.id}" title="اقتراح كمية توريد" aria-label="توريد ${esc(m.name)}">
+              <i data-lucide="package-plus" width="16"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    $('inventoryEmpty').hidden = filtered.length !== 0;
+    $('inventoryCountText').textContent = `عرض ${num(filtered.length)} من ${num(medicines.length)} صنف`;
+    renderIcons();
+  }
+
+  function populateMedicineSelects() {
+    const options = medicines.map(m =>
+      `<option value="${m.id}">${esc(m.name)} — المتاح ${num(m.stock)}</option>`
+    ).join('');
+
+    ['dispatchMedicine','reallocationMedicine'].forEach(id => {
+      const select = $(id);
+      const previous = select.value;
+      select.innerHTML = options || '<option value="">لا توجد أصناف</option>';
+      if (medicines.some(m => String(m.id) === previous)) select.value = previous;
+    });
+  }
+
+  // -------------------------------------------------------
+  // 4. الشحنات ومحاكاة مراحل التوصيل
+  // -------------------------------------------------------
+
+  function calculateLeadTime(distance, traffic, priority) {
+    const preparation = priority === 'critical' ? 0.25 :
+      priority === 'urgent' ? 0.5 : 1;
+    return distance / 30 * traffic + preparation;
+  }
+
+  function updateLeadEstimate() {
+    const distance = Number($('routeDistance').value);
+    const traffic = Number($('trafficLevel').value);
+    const priority = $('dispatchPriority').value;
+
+    if (!Number.isFinite(distance) || distance <= 0 || distance > 2000) {
+      $('estimatedTime').textContent = 'أدخل مسافة صحيحة';
+      return;
+    }
+
+    const hours = calculateLeadTime(distance, traffic, priority);
+    $('estimatedTime').textContent = hours.toFixed(1) + ' ساعة';
+  }
+
+  function renderTracking() {
+    const order = orders.find(o => o.id === activeOrderId);
+
+    if (!order) {
+      $('trackingSubtitle').textContent = 'أنشئ طلباً لعرض تفاصيل الرحلة.';
+      $('trackingStatus').textContent = 'بانتظار الطلب';
+      $('trackingStatus').className = 'status status-info';
+      $('trackingPercent').textContent = '0%';
+      $('trackingProgress').style.width = '0%';
+      $('trackingDetail').textContent = 'لا توجد شحنة نشطة.';
+      $('trackingETA').textContent = '—';
+      $('advanceShipment').disabled = true;
+      $('completeShipment').disabled = true;
+      document.querySelectorAll('#trackingSteps .step-dot').forEach((dot, i) => {
+        dot.className = 'step-dot';
+        dot.innerHTML = [
+          '<i data-lucide="clipboard-check" width="15"></i>',
+          '<i data-lucide="package" width="15"></i>',
+          '<i data-lucide="truck" width="15"></i>',
+          '<i data-lucide="check" width="15"></i>'
+        ][i];
+      });
+      document.querySelectorAll('#trackingSteps .timeline-line').forEach(line => line.classList.remove('done'));
+      renderIcons();
+      return;
+    }
+
+    const percent = [0, 25, 65, 85, 100][order.stage];
+    $('trackingSubtitle').textContent = `${order.id} · ${order.branch}`;
+    $('trackingStatus').textContent = orderStatus(order.stage);
+    $('trackingStatus').className = 'status ' + orderStatusClass(order.stage);
+    $('trackingPercent').textContent = percent + '%';
+    $('trackingProgress').style.width = percent + '%';
+    $('trackingProgress').style.background = order.stage === 4 ? '#10B981' : '#FF7F3E';
+
+    $('trackingDetail').textContent = order.stage === 1 ? 'تم تسجيل الطلب بنجاح.' :
+      order.stage === 2 ? 'المخزن يجهز الكمية المطلوبة.' :
+      order.stage === 3 ? 'الشحنة في الطريق إلى الفرع.' :
+      'اكتملت عملية التسليم التجريبية.';
+
+    $('trackingETA').textContent = order.stage === 4 ? 'تم التسليم' :
+      'الوقت التقديري: ' + order.eta.toFixed(1) + ' ساعة';
+
+    $('advanceShipment').disabled = order.stage >= 4;
+    $('completeShipment').disabled = order.stage >= 4;
+
+    document.querySelectorAll('#trackingSteps .step-dot').forEach((dot, i) => {
+      const step = i + 1;
+      dot.className = 'step-dot';
+      if (step < order.stage || order.stage === 4) {
+        dot.classList.add('done');
+        dot.innerHTML = '<i data-lucide="check" width="15"></i>';
+      } else if (step === order.stage) {
+        dot.classList.add('current');
+      }
+    });
+
+    document.querySelectorAll('#trackingSteps .timeline-line').forEach((line, i) => {
+      line.classList.toggle('done', order.stage > i + 1);
+    });
+
+    renderIcons();
+  }
+
+  function renderOrders() {
+    $('ordersBadge').textContent = num(orders.length) + ' طلب';
+
+    $('ordersTable').innerHTML = orders.map(o => {
+      const m = medicineById(o.medicineId);
+      return `
+        <tr>
+          <td class="font-extrabold">${esc(o.id)}</td>
+          <td>${esc(m ? m.name : 'صنف محذوف')}</td>
+          <td>${esc(o.branch)}</td>
+          <td>${num(o.quantity)}</td>
+          <td><span class="status ${orderStatusClass(o.stage)}">${orderStatus(o.stage)}</span></td>
+          <td>
+            <button class="text-orange font-extrabold text-[11px]" data-track="${esc(o.id)}">تتبع ←</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    $('ordersEmpty').hidden = orders.length !== 0;
+    renderTracking();
+  }
+
+  function createOrder(event) {
+    event.preventDefault();
+
+    const medicineId = Number($('dispatchMedicine').value);
+    const medicine = medicineById(medicineId);
+    const quantity = Number($('dispatchQuantity').value);
+    const distance = Number($('routeDistance').value);
+    const traffic = Number($('trafficLevel').value);
+    const priority = $('dispatchPriority').value;
+
+    if (!medicine) {
+      showToast('اختاري دواءً صالحاً أولاً.', true);
+      return;
+    }
+
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 1000000) {
+      showToast('أدخلي كمية صحيحة للطلب.', true);
+      return;
+    }
+
+    if (!Number.isFinite(distance) || distance <= 0 || distance > 2000) {
+      showToast('أدخلي مسافة صحيحة بين 1 و2000 كم.', true);
+      return;
+    }
+
+    if (isExpired(medicine)) {
+      showToast('هذا الصنف منتهي الصلاحية. لا يمكن إنشاء طلب تجريبي له.', true);
+      return;
+    }
+
+    const order = {
+      id: 'PF-' + nextOrderNumber++,
+      medicineId,
+      branch: $('dispatchBranch').value,
+      warehouse: $('dispatchWarehouse').value,
+      quantity,
+      eta: calculateLeadTime(distance, traffic, priority),
+      priority,
+      stage: 1,
+      distance
+    };
+
+    orders.unshift(order);
+    activeOrderId = order.id;
+
+    renderOrders();
+    renderDashboard();
+    showToast(`تم تسجيل الطلب ${order.id} بنجاح.`);
+  }
+
+  function advanceOrder(complete = false) {
+    const order = orders.find(o => o.id === activeOrderId);
+
+    if (!order) {
+      showToast('لا توجد شحنة نشطة.', true);
+      return;
+    }
+
+    if (order.stage >= 4) {
+      showToast('تم تسليم هذه الشحنة بالفعل.');
+      return;
+    }
+
+    order.stage = complete ? 4 : Math.min(4, order.stage + 1);
+
+    renderOrders();
+    renderDashboard();
+
+    showToast(order.stage === 4
+      ? `تم تسجيل التسليم للطلب ${order.id}.`
+      : 'تم تحديث حالة الشحنة إلى: ' + orderStatus(order.stage));
+  }
+
+  // -------------------------------------------------------
+  // 5. إعادة التوزيع بين الفروع
+  // -------------------------------------------------------
+
+  function analyzeReallocation(event) {
+    event.preventDefault();
+
+    const medicine = medicineById($('reallocationMedicine').value);
+    const targetName = $('reallocationBranch').value;
+
+    if (!medicine) {
+      showToast('اختاري صنفاً صالحاً.', true);
+      return;
+    }
+
+    const target = branchStock.find(b => b.name === targetName);
+    const targetStock = target.stock[medicine.id] || 0;
+    const shortage = Math.max(0, medicine.safety - targetStock);
+
+    if (isExpired(medicine)) {
+      $('reallocationResults').innerHTML = `
+        <div class="panel p-5">
+          <span class="status status-danger">الصنف منتهي الصلاحية</span>
+          <p class="muted text-xs leading-7 mt-3">لا يمكن اقتراح نقل هذا الصنف قبل مراجعة الجودة والصلاحية.</p>
+        </div>`;
+      return;
+    }
+
+    if (shortage === 0) {
+      $('reallocationResults').innerHTML = `
+        <div class="panel p-5">
+          <span class="status status-ok">الفرع فوق حد الأمان</span>
+          <p class="muted text-xs leading-7 mt-3">الرصيد الافتراضي في ${esc(targetName)} هو ${num(targetStock)} وحدة، وهو لا يقل عن حد الأمان (${num(medicine.safety)}).</p>
+        </div>`;
+      return;
+    }
+
+    const candidates = branchStock
+      .filter(b => b.name !== targetName)
+      .map(b => {
+        const stock = b.stock[medicine.id] || 0;
+        const surplus = Math.max(0, stock - medicine.safety);
+        const transferable = Math.min(shortage, surplus);
+        const estimatedHours = calculateLeadTime(b.distance + target.distance, 1.35, 'urgent');
+
+        return {...b, stock, surplus, transferable, estimatedHours};
+      })
+      .filter(b => b.transferable > 0)
+      .sort((a, b) => a.estimatedHours - b.estimatedHours);
+
+    if (!candidates.length) {
+      $('reallocationResults').innerHTML = `
+        <div class="panel p-5">
+          <span class="status status-danger">لا يوجد فائض كافٍ</span>
+          <h3 class="font-extrabold mt-3">${esc(medicine.name)}</h3>
+          <p class="muted text-xs leading-7 mt-2">لم نجد فرعاً لديه كمية قابلة للنقل فوق حد الأمان. راجع المخزن المركزي أو أنشئ طلب توريد.</p>
+          <button class="btn-primary mt-3" data-go="dispatch">إنشاء طلب توريد</button>
+        </div>`;
+      renderIcons();
+      return;
+    }
+
+    $('reallocationResults').innerHTML = `
+      <div class="panel p-5">
+        <div class="flex items-center justify-between gap-3 mb-4">
+          <div>
+            <span class="status status-warn">نقص مقدر: ${num(shortage)} وحدة</span>
+            <h3 class="font-extrabold mt-3">${esc(medicine.name)}</h3>
+            <p class="muted text-[11px] mt-1">الفرع المحتاج: ${esc(targetName)}</p>
+          </div>
+          <div class="stat-icon bg-[#FFF5D9] text-[#A96A00]"><i data-lucide="git-compare-arrows" width="21"></i></div>
+        </div>
+        <div class="space-y-3">
+          ${candidates.map((b, i) => `
+            <div class="border border-[#E8EDF3] rounded-xl p-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div class="font-extrabold text-xs">${i === 0 ? 'أفضل اقتراح مبدئي' : 'اقتراح بديل'} · ${esc(b.name)}</div>
+                  <div class="muted text-[10px] mt-2">المتاح: ${num(b.stock)} وحدة · الفائض فوق حد الأمان: ${num(b.surplus)}</div>
+                </div>
+                <span class="status ${i === 0 ? 'status-ok' : 'status-info'}">${num(b.transferable)} وحدة قابلة للنقل</span>
+              </div>
+              <div class="grid grid-cols-2 gap-3 mt-4">
+                <div class="bg-[#F8FAFC] rounded-lg p-3">
+                  <div class="muted text-[10px]">وقت وصول تقديري</div>
+                  <div class="font-extrabold mt-1">${b.estimatedHours.toFixed(1)} ساعة</div>
+                </div>
+                <div class="bg-[#F8FAFC] rounded-lg p-3">
+                  <div class="muted text-[10px]">المسافة النموذجية</div>
+                  <div class="font-extrabold mt-1">${num(b.distance + target.distance)} كم</div>
+                </div>
+              </div>
+              <button class="btn-secondary w-full mt-3" data-transfer="${b.name}" data-med="${medicine.id}" data-quantity="${b.transferable}" data-target="${targetName}">
+                <i data-lucide="arrow-left-right" width="15"></i> اعتماد اقتراح النقل التجريبي
+              </button>
+            </div>
+          `).join('')}
+        </div>
+        <p class="muted text-[10px] leading-6 mt-4">هذه اقتراحات حسابية مبنية على أرصدة ومسافات افتراضية، وتحتاج إلى مراجعة واعتماد قبل أي نقل فعلي.</p>
+      </div>
+    `;
+    renderIcons();
+  }
+
+  function approveTransfer(button) {
+    const sourceName = button.dataset.transfer;
+    const medicine = medicineById(button.dataset.med);
+    const quantity = Number(button.dataset.quantity);
+    const targetName = button.dataset.target;
+
+    const source = branchStock.find(b => b.name === sourceName);
+    const target = branchStock.find(b => b.name === targetName);
+
+    if (!medicine || !source || !target || !Number.isInteger(quantity) || quantity < 1) {
+      showToast('تعذر التحقق من بيانات النقل.', true);
+      return;
+    }
+
+    if (isExpired(medicine)) {
+      showToast('لا يمكن نقل صنف منتهي الصلاحية.', true);
+      return;
+    }
+
+    const currentSource = source.stock[medicine.id] || 0;
+    const currentTarget = target.stock[medicine.id] || 0;
+    const surplus = Math.max(0, currentSource - medicine.safety);
+    const shortage = Math.max(0, medicine.safety - currentTarget);
+    const actualQuantity = Math.min(quantity, surplus, shortage);
+
+    if (actualQuantity <= 0) {
+      showToast('تغيرت أرصدة الفروع. أعد تحليل فرص النقل.', true);
+      return;
+    }
+
+    source.stock[medicine.id] = currentSource - actualQuantity;
+    target.stock[medicine.id] = currentTarget + actualQuantity;
+
+    $('reallocationResults').innerHTML = `
+      <div class="panel p-5">
+        <span class="status status-ok">تم تحديث الأرصدة التجريبية</span>
+        <h3 class="font-extrabold mt-3">عملية نقل ${num(actualQuantity)} وحدة</h3>
+        <p class="muted text-xs leading-7 mt-2">من ${esc(sourceName)} إلى ${esc(targetName)} للصنف ${esc(medicine.name)}.</p>
+        <p class="muted text-[10px] mt-2">في نظام حقيقي، يجب تسجيل موافقة المسؤول وتفاصيل التشغيلة والنقل قبل التنفيذ.</p>
+        <button class="btn-secondary mt-4" data-go="branches">تحليل عملية أخرى</button>
+      </div>`;
+
+    showToast('تم تحديث أرصدة الفروع في النموذج.');
+    renderIcons();
+  }
+
+  // -------------------------------------------------------
+  // 6. الرسوم البيانية والتقارير
+  // -------------------------------------------------------
+
+  function renderChart(id, type, data, extraOptions = {}) {
+    const canvas = $(id);
+    if (!canvas || !window.Chart) return;
+
+    if (chartInstances[id]) chartInstances[id].destroy();
+
+    chartInstances[id] = new Chart(canvas, {
+      type,
+      data,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              usePointStyle: true,
+              boxWidth: 7,
+              padding: 18,
+              font: {family: 'Cairo', size: 10}
+            }
+          },
+          tooltip: {
+            rtl: true,
+            titleFont: {family: 'Cairo'},
+            bodyFont: {family: 'Cairo'}
+          }
+        },
+        scales: type === 'doughnut' ? {} : {
+          x: {
+            grid: {display: false},
+            ticks: {font: {family: 'Cairo', size: 10}}
+          },
+          y: {
+            beginAtZero: true,
+            border: {display: false},
+            grid: {color: '#EEF2F6'},
+            ticks: {font: {family: 'Cairo', size: 10}}
+          }
+        },
+        ...extraOptions
+      }
+    });
+  }
+
+  function renderAnalytics() {
+    const healthy = medicines.filter(m => stockStatus(m) === 'healthy').length;
+    const low = medicines.filter(m => ['low','critical'].includes(stockStatus(m))).length;
+    const expired = medicines.filter(m => isExpired(m)).length;
+
+    renderChart('statusChart', 'doughnut', {
+      labels: ['متوفر','منخفض أو حرج','منتهي الصلاحية'],
+      datasets: [{
+        data: [healthy, low, expired],
+        backgroundColor: ['#10B981','#F4B740','#D14343'],
+        borderWidth: 0,
+        hoverOffset: 5
+      }]
+    }, {
+      cutout: '70%',
+      scales: {}
+    });
+
+    renderChart('analyticsChart', 'bar', {
+      labels: ['السبت','الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة'],
+      datasets: [
+        {label:'الوارد', data:[210,300,250,380,290,420,350], backgroundColor:'#10B981', borderRadius:5},
+        {label:'المصروف', data:[180,240,280,250,310,330,290], backgroundColor:'#FF7F3E', borderRadius:5}
+      ]
+    });
+
+    const units = medicines.reduce((s,m) => s + m.stock, 0);
+    const stockAlerts = medicines.filter(m => ['low','critical'].includes(stockStatus(m))).length;
+    const active = orders.filter(o => o.stage < 4).length;
+
+    $('analyticsTable').innerHTML = [
+      ['عدد أصناف الأدوية', num(medicines.length), 'الأصناف المسجلة في النموذج'],
+      ['إجمالي الوحدات المتاحة', num(units), 'إجمالي الرصيد المسجل حالياً'],
+      ['أصناف تحت حد الأمان', num(stockAlerts), 'تحتاج إلى مراجعة خطة التوريد'],
+      ['الأصناف المنتهية', num(expired), 'تحتاج إلى العزل والمراجعة'],
+      ['الشحنات النشطة', num(active), 'طلبات لم تصل بعد إلى مرحلة التسليم']
+    ].map(row => `
+      <tr>
+        <td class="font-extrabold">${row[0]}</td>
+        <td class="font-extrabold">${row[1]}</td>
+        <td class="muted text-xs">${row[2]}</td>
+      </tr>
+    `).join('');
+  }
+
+  function renderQuality() {
+    const flagged = medicines.filter(m =>
+      isExpired(m) || isNearExpiry(m) || stockStatus(m) !== 'healthy'
+    );
+
+    $('qualityTable').innerHTML = `
+      <table>
+        <thead><tr><th>الصنف</th><th>الصلاحية</th><th>المخزون</th><th>المراجعة المطلوبة</th></tr></thead>
+        <tbody>
+          ${flagged.map(m => {
+            const issues = [];
+            if (isExpired(m)) issues.push('عزل ومراجعة الصلاحية');
+            else if (isNearExpiry(m)) issues.push('مراجعة الصلاحية قريباً');
+            if (m.stock === 0) issues.push('نفاد المخزون');
+            else if (m.stock <= m.safety) issues.push('مراجعة إعادة التوريد');
+
+            return `
+              <tr>
+                <td class="font-extrabold">${esc(m.name)}</td>
+                <td>${esc(m.expiry)}</td>
+                <td>${num(m.stock)}</td>
+                <td><span class="status ${isExpired(m) || m.stock === 0 ? 'status-danger' : 'status-warn'}">${esc(issues.join(' · '))}</span></td>
+              </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+      ${flagged.length ? '' : '<div class="empty-state">لا توجد أصناف تحتاج إلى مراجعة وفق القواعد الحالية.</div>'}
+    `;
+  }
+
+  // -------------------------------------------------------
+  // 7. تصدير CSV
+  // -------------------------------------------------------
+
+  function exportInventory() {
+    const headers = ['رقم الصنف','اسم الدواء','الفئة','الكمية الحالية','حد الأمان','تاريخ الصلاحية','الحالة'];
+    const rows = medicines.map(m => [
+      m.id, m.name, m.category, m.stock, m.safety, m.expiry, statusLabel(stockStatus(m))
+    ]);
+
+    const csv = '\uFEFF' + [headers, ...rows].map(row =>
+      row.map(cell => '"' + String(cell).replace(/"/g, '""') + '"').join(',')
+    ).join('\r\n');
+
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'pharmaflow-inventory.csv';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    showToast('تم تجهيز ملف CSV للتنزيل.');
+  }
+
+  // -------------------------------------------------------
+  // 8. إضافة صنف جديد
+  // -------------------------------------------------------
+
+  function openMedicineModal() {
+    $('medicineModal').style.display = 'flex';
+    $('newMedicineExpiry').min = dateOffset(0);
+    $('newMedicineName').focus();
+  }
+
+  function closeMedicineModal() {
+    $('medicineModal').style.display = 'none';
+  }
+
+  function addMedicine(event) {
+    event.preventDefault();
+
+    const name = $('newMedicineName').value.trim();
+    const category = $('newMedicineCategory').value;
+    const stock = Number($('newMedicineStock').value);
+    const safety = Number($('newMedicineSafety').value);
+    const expiry = $('newMedicineExpiry').value;
+
+    if (!name || !expiry ||
+        !Number.isInteger(stock) || stock < 0 || stock > 1000000 ||
+        !Number.isInteger(safety) || safety < 1 || safety > 1000000) {
+      showToast('راجعي بيانات الصنف والكميات.', true);
+      return;
+    }
+
+    if (expiry < dateOffset(0)) {
+      showToast('تاريخ الصلاحية يجب أن يكون اليوم أو في المستقبل.', true);
+      return;
+    }
+
+    medicines.push({id:nextMedicineId++, name, category, stock, safety, expiry});
+
+    // تهيئة أرصدة الفروع الافتراضية للصنف الجديد.
+    branchStock.forEach((branch, index) => {
+      branch.stock[medicines[medicines.length - 1].id] = index === 1 ? stock : 0;
+    });
+
+    $('medicineForm').reset();
+    closeMedicineModal();
+
+    refreshAll();
+    showToast('تمت إضافة الصنف إلى المخزون.');
+  }
+
+  // -------------------------------------------------------
+  // 9. تحديث الواجهة وربط الأحداث
+  // -------------------------------------------------------
+
+  function refreshAll() {
+    populateMedicineSelects();
+    renderDashboard();
+    renderInventory();
+    renderOrders();
+
+    if (currentView === 'analytics') renderAnalytics();
+    if (currentView === 'quality') renderQuality();
+  }
+
+  document.querySelectorAll('[data-view]').forEach(button => {
+    button.addEventListener('click', () => navigate(button.dataset.view));
+  });
+
+  document.querySelectorAll('[data-go]').forEach(button => {
+    button.addEventListener('click', () => navigate(button.dataset.go));
+  });
+
+  $('openSidebar').addEventListener('click', () => {
+    $('sidebar').classList.add('open');
+    $('mobileOverlay').classList.add('show');
+  });
+
+  $('closeSidebar').addEventListener('click', () => {
+    $('sidebar').classList.remove('open');
+    $('mobileOverlay').classList.remove('show');
+  });
+
+  $('mobileOverlay').addEventListener('click', () => {
+    $('sidebar').classList.remove('open');
+    $('mobileOverlay').classList.remove('show');
+  });
+
+  $('refreshButton').addEventListener('click', () => {
+    refreshAll();
+    showToast('تم تحديث المؤشرات من البيانات الحالية.');
+  });
+
+  $('alertsButton').addEventListener('click', () => {
+    const alerts = getAlerts();
+    navigate('dashboard');
+    if (!alerts.length) {
+      showToast('لا توجد تنبيهات حالياً.');
+    } else {
+      showToast(`يوجد ${alerts.length} تنبيه يحتاج إلى المراجعة.`);
+      $('dashboardAlerts').scrollIntoView({behavior:'smooth', block:'center'});
+    }
+  });
+
+  $('inventorySearch').addEventListener('input', renderInventory);
+  $('categoryFilter').addEventListener('change', renderInventory);
+  $('statusFilter').addEventListener('change', renderInventory);
+
+  $('dispatchForm').addEventListener('submit', createOrder);
+  $('advanceShipment').addEventListener('click', () => advanceOrder(false));
+  $('completeShipment').addEventListener('click', () => advanceOrder(true));
+
+  ['routeDistance','trafficLevel','dispatchPriority'].forEach(id => {
+    $(id).addEventListener('input', updateLeadEstimate);
+    $(id).addEventListener('change', updateLeadEstimate);
+  });
+
+  $('reallocationForm').addEventListener('submit', analyzeReallocation);
+
+  $('inventoryExport').addEventListener('click', exportInventory);
+  $('exportSidebar').addEventListener('click', exportInventory);
+  $('analyticsExport').addEventListener('click', exportInventory);
+
+  $('addMedicineButton').addEventListener('click', openMedicineModal);
+  $('closeMedicineModal').addEventListener('click', closeMedicineModal);
+  $('cancelMedicine').addEventListener('click', closeMedicineModal);
+  $('medicineForm').addEventListener('submit', addMedicine);
+
+  $('medicineModal').addEventListener('click', event => {
+    if (event.target === $('medicineModal')) closeMedicineModal();
+  });
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') closeMedicineModal();
+  });
+
+  document.addEventListener('click', event => {
+    const inspect = event.target.closest('[data-inspect]');
+    if (inspect) {
+      navigate('inventory');
+      $('inventorySearch').value = medicineById(inspect.dataset.inspect)?.name || '';
+      renderInventory();
+      return;
+    }
+
+    const restock = event.target.closest('[data-restock]');
+    if (restock) {
+      const medicine = medicineById(restock.dataset.restock);
+      if (!medicine) return;
+
+      navigate('dispatch');
+      $('dispatchMedicine').value = String(medicine.id);
+      $('dispatchQuantity').value = Math.max(1, medicine.safety * 2 - medicine.stock);
+      showToast('تم تجهيز طلب مقترح. راجعي الكمية قبل التسجيل.');
+      return;
+    }
+
+    const track = event.target.closest('[data-track]');
+    if (track) {
+      activeOrderId = track.dataset.track;
+      navigate('dispatch');
+      renderTracking();
+      return;
+    }
+
+    const transfer = event.target.closest('[data-transfer]');
+    if (transfer) {
+      approveTransfer(transfer);
+    }
+  });
+
+  // -------------------------------------------------------
+  // 10. التشغيل الأول
+  // -------------------------------------------------------
+
+  const dateFormatter = new Intl.DateTimeFormat('ar-EG', {
+    weekday:'long', day:'numeric', month:'long', year:'numeric'
+  });
+
+  $('currentDate').textContent = dateFormatter.format(new Date());
+
+  populateMedicineSelects();
+  activeOrderId = orders[0]?.id || null;
+  updateLeadEstimate();
+  refreshAll();
+  renderIcons();
+})();
+</script>
+</body>
+</html>
